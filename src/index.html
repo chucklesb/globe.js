@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="icon" href="favicon.png" type="image/png">
+        <meta charset="UTF-8">
+        <meta name="description" content="An interactive, realistic spinning globe three.js demo">
+        <meta name="keywords" content="globe, Earth, three.js, web development, interactive">
+        <meta name="author" content="chucklesB">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>globe.js</title>
+        <link rel="stylesheet" href="style.css">
+        <!-- TODO: update shader code for compatibility with newer three.js versions -->
+        <!-- TODO: use NPM/Vite for dependencies instead of relying on CDN provider -->
+        <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.151.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.151.0/examples/jsm/"
+            }
+        }
+        </script>
+    </head>
+    <body>
+        <noscript>
+            <p>This application requires JavaScript to be enabled. Please enable JavaScript in your browser settings.</p>
+        </noscript>
+
+        <!-- Loading screen - TODO: implement THREE.LoadingManager
+        <div id="loading-screen" class="loading-container">
+            <div class="loading-spinner"></div>
+        </div>
+        -->
+
+        <!-- fragment.glsl - atmospheric glow -->
+        <!-- Credit: https://github.com/franky-adl/threejs-earth -->
+        <!-- TODO: load shaders from external resource files -->
+        <script type="x-shader/x-fragment" id="fragmentshader">
+            varying vec3 vNormal;
+            varying vec3 eyeVector;
+            uniform float atmOpacity;
+            uniform float atmPowFactor;
+            uniform float atmMultiplier;
+
+            void main() {
+                // Starting from the rim to the center at the back, dotP would increase from 0 to 1
+                float dotP = dot( vNormal, eyeVector );
+                // This factor is to create the effect of a realistic thickening of the atmosphere coloring
+                float factor = pow(dotP, atmPowFactor) * atmMultiplier;
+                // Adding in a bit of dotP to the color to make it whiter while the color intensifies
+                vec3 atmColor = vec3(0.35 + dotP/4.5, 0.35 + dotP/4.5, 1.0);
+                // use atmOpacity to control the overall intensity of the atmospheric color
+                gl_FragColor = vec4(atmColor, atmOpacity) * factor;
+            }
+        </script>
+
+        <!-- vertex.glsl - atmospheric glow -->
+        <!-- Credit: https://github.com/franky-adl/threejs-earth -->
+        <!-- TODO: load shaders from external resource files -->
+        <script type="x-shader/x-vertex" id="vertexshader">
+            varying vec3 vNormal;
+            varying vec3 eyeVector;
+        
+            void main() {
+                // modelMatrix transforms the coordinates local to the model into world space
+                vec4 mvPos = modelViewMatrix * vec4( position, 1.0 );
+
+                // normalMatrix is a matrix that is used to transform normals from object space to view space.
+                vNormal = normalize( normalMatrix * normal );
+
+                // vector pointing from camera to vertex in view space
+                eyeVector = normalize(mvPos.xyz);
+        
+                gl_Position = projectionMatrix * mvPos;
+            }
+        </script>
+
+        <script type="module" src="globe.js"></script>
+    </body>
+</html>
