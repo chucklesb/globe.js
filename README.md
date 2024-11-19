@@ -1,6 +1,9 @@
 # globe.js
 An interactive, realistic spinning globe three.js demo
 
+## Live Demo
+https://globe-js.vercel.app/
+
 ## Screenshot
 ![screenshot](screenshot.png)
 
