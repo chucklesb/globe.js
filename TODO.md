@@ -1,0 +1,13 @@
+- [ ] Update shader code for compatibility with newer three.js versions
+- [ ] Use NPM/Vite for dependencies instead of relying on CDN provider
+- [ ] Split the code into logical components and modules
+- [ ] Create proper class structure for main components
+- [ ] Implement state management for simulation parameters
+- [ ] Implement THREE.LoadingManager and loading screen
+- [ ] Implement better error handling, e.g. fallbacks for missing textures
+- [ ] Implement better memory management, e.g. dispose of unused objects
+- [ ] Implement performance optimizations, e.g. LOD meshes and texture compression
+- [x] Implement performance monitoring, e.g. FPS counter and memory usage
+- [ ] Implement constants management, remove magic numbers
+- [ ] Implement type safety considerations, e.g. use JSDoc type definitions
+- [ ] Implement Keplerian orbital elements and additional planetary scenes

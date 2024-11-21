@@ -4,77 +4,44 @@
  */
 // chucklesB: Modified from https://github.com/ektogamat/lensflare-threejs-vanilla
 
-import * as THREE from 'three'
-// chucklesB: Removed maath dependency, it's not needed as THREE.MathUtils provides a damp function.
-export let LensFlareParams = {}
+import * as THREE from "three"
 
 /**
- * @param {Boolean | undefined} enabled Enable or disable the effect
- * @param {THREE.Vector3 | undefined} lensPosition The lens position in Vector3 format
- * @param {Number | undefined} opacity The opacity for this effect
- * @param {THREE.Color | undefined} colorGain The colorGain in RGB format
- * @param {Number | undefined} starPoints The integer number of star points
- * @param {Number | undefined} glareSize The float number of glare size
- * @param {Number | undefined} flareSize The float number of flare size
- * @param {Number | undefined} flareSpeed The float number of the flare animation speed. Set 0 to disable
- * @param {Number | undefined} flareShape The float number to define the flare shape. Higher number sharper
- * @param {Number | undefined} haloScale The float number to define the halo of startBurst scale
- * @param {Boolean | undefined} animated Enable or disable the flare rotation animation
- * @param {Boolean | undefined} anamorphic Enable or disable the anamorphic flare shape
- * @param {Boolean | undefined} secondaryGhosts Enable or disable the secondary ghosts
- * @param {Boolean | undefined} starBurst Enable or disable the star burst. Disable for better performance
- * @param {Number | undefined} ghostScale The float number of the ghosts scale
- * @param {Boolean | undefined} aditionalStreaks Enable or disable the aditional streaks
- * @param {Boolean | undefined} followMouse Enable or disable follow mouse lens flare
+ * @param {Object} options Options to customize the lens flare effect.
  */
 
-export function LensFlareEffect(
-  enabled,
-  lensPosition,
-  opacity,
-  colorGain,
-  starPoints,
-  glareSize,
-  flareSize,
-  flareSpeed,
-  flareShape,
-  haloScale,
-  animated,
-  anamorphic,
-  secondaryGhosts,
-  starBurst,
-  ghostScale,
-  aditionalStreaks,
-  followMouse
-) {
-  LensFlareParams = {
-    enabled: enabled != undefined ? enabled : true,
-    lensPosition: lensPosition != undefined ? lensPosition : new THREE.Vector3(25, 2, -40),
-    opacity: opacity != undefined ? opacity : 0.8,
-    colorGain: colorGain != undefined ? colorGain : new THREE.Color(95, 12, 10),
-    starPoints: starPoints != undefined ? starPoints : 5.0,
-    glareSize: glareSize != undefined ? glareSize : 0.55,
-    flareSize: flareSize != undefined ? flareSize : 0.004,
-    flareSpeed: flareSpeed != undefined ? flareSpeed : 0.4,
-    flareShape: flareShape != undefined ? flareShape : 1.2,
-    haloScale: haloScale != undefined ? haloScale : 0.5,
-    animated: animated != undefined ? animated : true,
-    anamorphic: anamorphic != undefined ? anamorphic : false,
-    secondaryGhosts: secondaryGhosts != undefined ? secondaryGhosts : true,
-    starBurst: starBurst != undefined ? starBurst : true,
-    ghostScale: ghostScale != undefined ? ghostScale : 0.3,
-    aditionalStreaks: aditionalStreaks != undefined ? aditionalStreaks : true,
-    followMouse: followMouse != undefined ? followMouse : false,
-  }
+export function LensFlareEffect(options = {}) {
+  const defaults = {
+    enabled: true,
+    lensPosition: new THREE.Vector3(25, 2, -40),
+    opacity: 0.8,
+    colorGain: new THREE.Color(95, 12, 10),
+    starPoints: 5.0,
+    glareSize: 0.55,
+    flareSize: 0.004,
+    flareSpeed: 0.4,
+    flareShape: 1.2,
+    haloScale: 0.5,
+    animated: true,
+    anamorphic: false,
+    secondaryGhosts: true,
+    starBurst: true,
+    ghostScale: 0.3,
+    additionalStreaks: true
+  };
 
-  const clock = new THREE.Clock()
-  const screenPosition = LensFlareParams.lensPosition
-  const viewport = new THREE.Vector4()
-  const oldOpacity = LensFlareParams.opacity
+  // Merge options with defaults
+  const LensFlareParams = { ...defaults, ...options };
 
-  let internalOpacity = oldOpacity
-  let flarePosition = new THREE.Vector3()
-  const raycaster = new THREE.Raycaster()
+  // Internal variables
+  const clock = new THREE.Clock();
+  const screenPosition = LensFlareParams.lensPosition;
+  const viewport = new THREE.Vector4();
+  const oldOpacity = LensFlareParams.opacity;
+
+  let internalOpacity = oldOpacity;
+  let flarePosition = new THREE.Vector3();
+  const raycaster = new THREE.Raycaster();
 
   const lensFlareMaterial = new THREE.ShaderMaterial({
     uniforms: {
@@ -95,8 +62,7 @@ export function LensFlareEffect(
       secondaryGhosts: { value: LensFlareParams.secondaryGhosts },
       starBurst: { value: LensFlareParams.starBurst },
       ghostScale: { value: LensFlareParams.ghostScale },
-      aditionalStreaks: { value: LensFlareParams.aditionalStreaks },
-      followMouse: { value: LensFlareParams.followMouse },
+      additionalStreaks: { value: LensFlareParams.additionalStreaks },
       lensDirtTexture: { value: new THREE.TextureLoader().load('textures/lens-Dirt-Texture.jpg') }
     },
     /*GLSL */
@@ -120,7 +86,7 @@ export function LensFlareEffect(
     uniform bool secondaryGhosts;
     uniform bool starBurst;
     uniform float ghostScale;
-    uniform bool aditionalStreaks;
+    uniform bool additionalStreaks;
     uniform sampler2D lensDirtTexture;
     varying vec2 vUv;
 
@@ -441,7 +407,7 @@ export function LensFlareEffect(
         vec3 finalColor = LensFlare(myUV, mouse) * 20.0 * colorGain / 256.;
 
         //Aditional Streaks
-        if(aditionalStreaks){
+        if(additionalStreaks){
             vec3 circColor = vec3(0.9, 0.2, 0.1);
             vec3 circColor2 = vec3(0.3, 0.1, 0.9);
 
@@ -505,79 +471,71 @@ export function LensFlareEffect(
     depthWrite: false,
     depthTest: false,
     blending: THREE.AdditiveBlending,
-    name: 'LensFlareShader',
-  })
+    name: 'LensFlareShader'
+  });
 
   lensFlareMaterial.onBeforeRender = function (renderer, scene, camera) {
-    const elapsedTime = clock.getElapsedTime()
+    const elapsedTime = clock.getElapsedTime();
 
-    renderer.getCurrentViewport(viewport)
-    lensFlareContainer.lookAt(camera)
+    renderer.getCurrentViewport(viewport);
+    lensFlareContainer.lookAt(camera);
 
-    lensFlareMaterial.uniforms.iResolution.value.set(viewport.z, viewport.w)
+    lensFlareMaterial.uniforms.iResolution.value.set(viewport.z, viewport.w);
 
-    if (lensFlareMaterial.uniforms.followMouse.value === true) {
-      lensFlareMaterial.uniforms.lensPosition.value.set(mouse.x, mouse.y)
-    } else {
-      const projectedPosition = screenPosition.clone()
-      projectedPosition.project(camera)
+    const projectedPosition = screenPosition.clone();
+    projectedPosition.project(camera);
 
-      flarePosition.x = projectedPosition.x
-      flarePosition.y = projectedPosition.y
-      flarePosition.z = projectedPosition.z
+    flarePosition.x = projectedPosition.x;
+    flarePosition.y = projectedPosition.y;
+    flarePosition.z = projectedPosition.z;
 
-      if (flarePosition.z < 1) {
-        lensFlareMaterial.uniforms.lensPosition.value.set(flarePosition.x, flarePosition.y)
-      }
-
-      raycaster.setFromCamera(projectedPosition, camera)
-      const intersects = raycaster.intersectObjects(scene.children, true)
-      checkTransparency(intersects)
+    if (flarePosition.z < 1) {
+      lensFlareMaterial.uniforms.lensPosition.value.set(flarePosition.x, flarePosition.y);
     }
 
-    lensFlareMaterial.uniforms.iTime.value = elapsedTime
-    // chucklesB: Modified to use THREE.MathUtils.damp instead of maath.easing.damp
+    raycaster.setFromCamera(projectedPosition, camera);
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    checkTransparency(intersects);
+
+    lensFlareMaterial.uniforms.iTime.value = elapsedTime;
     lensFlareMaterial.uniforms.opacity.value = THREE.MathUtils.damp(
-        lensFlareMaterial.uniforms.opacity.value,   // current value
-        internalOpacity,                            // target value
-        20,                                         // smoothing factor
-        clock.getDelta()                            // delta time
+      lensFlareMaterial.uniforms.opacity.value,   // current value
+      internalOpacity,                            // target value
+      20,                                         // smoothing factor
+      clock.getDelta()                            // delta time
     );
-  }
+  };
 
   /**
    * Transparency check
    */
-  // chucklesB: Modified transparency check
-  // TODO: This is a hack to fix an occlusion issue. A proper fix might be to loop through all intersected objects and check their visibility, transparency, etc.
-    function checkTransparency(intersects) {
-    if (intersects[0]) {
-      if (intersects[0].object) {
-        if (intersects[0].object.visible) {
-          // console.log(intersects[0].object)
-          if (intersects[0].object.userData === 'no-occlusion') {
-            internalOpacity = oldOpacity
-          } else {
-            internalOpacity = 0
-          }
-        }
+  function checkTransparency(intersects) {
+    internalOpacity = oldOpacity;
+
+    for (const intersect of intersects) {
+      // Skip this object if it is not visible or has the 'no-occlusion' property
+      if (!intersect.object.visible || intersect.object.userData === 'no-occlusion') {
+        continue;
       }
-    } else {
-      internalOpacity = oldOpacity
+
+      // Apply full occlusion if the object is not transparent or transmissive
+      if (!intersect.object.material.transparent && !intersect.object.material.transmission) {
+        internalOpacity = 0;
+        break; // Fully occluded, no need to check further objects
+      }
+
+      // Reduce lens flare effect based on the occluding object's opacity
+      if (intersect.object.material.transparent && intersect.object.material.opacity < 1) {
+        internalOpacity *= (1 - intersect.object.material.opacity);
+      }
+
+      // Reduce lens flare effect based on the occluding object's transmissivity
+      if (intersect.object.material.transmission > 0) {
+        internalOpacity *= intersect.object.material.transmission;
+      }
     }
   }
 
-  /**
-   * Mouse
-   */
-  const mouse = new THREE.Vector2()
-
-  window.addEventListener('mousemove', (event) => {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-  })
-
-  const lensFlareContainer = new THREE.Mesh(new THREE.PlaneGeometry(2, 2, 1, 1), lensFlareMaterial)
-
-  return lensFlareContainer
+  const lensFlareContainer = new THREE.Mesh(new THREE.PlaneGeometry(2, 2, 1, 1), lensFlareMaterial);
+  return lensFlareContainer;
 }
